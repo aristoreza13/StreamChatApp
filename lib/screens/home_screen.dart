@@ -1,17 +1,18 @@
 import 'package:chatstream/app.dart';
-import 'package:chatstream/helpers.dart';
 import 'package:chatstream/pages/call_page.dart';
 import 'package:chatstream/pages/contacts_page.dart';
 import 'package:chatstream/pages/messages_page.dart';
 import 'package:chatstream/pages/notifications_page.dart';
 import 'package:chatstream/screens/screens.dart';
 import 'package:chatstream/theme.dart';
-import 'package:chatstream/widgets/glowing_action_button.dart';
 import 'package:chatstream/widgets/widgets.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class HomeScreen extends StatelessWidget {
+  static Route get route => MaterialPageRoute(
+        builder: (context) => HomeScreen(),
+      );
   HomeScreen({Key? key}) : super(key: key);
 
   final ValueNotifier<int> pageIndex = ValueNotifier(0);
@@ -39,30 +40,20 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        iconTheme: Theme.of(context).iconTheme,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
         centerTitle: true,
         title: ValueListenableBuilder(
           valueListenable: title,
-          builder: (BuildContext context, String value, _) {
-            return Text(
-              value,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-            );
-          },
+          builder: (BuildContext context, String value, _) => Text(value),
         ),
         leadingWidth: 50,
         leading: Align(
           alignment: Alignment.centerRight,
           child: IconBackground(
-              icon: Icons.search,
-              onTap: () {
-                print("do search");
-              }),
+            icon: Icons.search,
+            onTap: () {
+              logger.i("do search");
+            },
+          ),
         ),
         actions: [
           Padding(

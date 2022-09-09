@@ -11,6 +11,7 @@ class ContactsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     // ignore: deprecated_member_use
     return UserListCore(
+      limit: 20,
       filter: Filter.notEqual('id', context.currentUser!.id),
       errorBuilder: (context, error) {
         return DisplayErrorMessage(

@@ -1,6 +1,7 @@
 import 'package:chatstream/app.dart';
 import 'package:chatstream/screens/screens.dart';
 import 'package:chatstream/widgets/widgets.dart';
+import 'package:firebase_auth/firebase_auth.dart' as firebase;
 import 'package:flutter/material.dart';
 import 'package:stream_chat_flutter_core/stream_chat_flutter_core.dart';
 
@@ -55,8 +56,9 @@ class _SignOutButtonState extends State<_SignOutButton> {
 
     try {
       await StreamChatCore.of(context).client.disconnectUser();
+      await firebase.FirebaseAuth.instance.signOut();
 
-      Navigator.of(context).push(SelectUserScreen.route);
+      Navigator.of(context).pushReplacement(SplashScreen.route);
     } on Exception catch (e, st) {
       logger.e('Could not sign out', e, st);
       setState(() {

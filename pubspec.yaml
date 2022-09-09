@@ -28,8 +28,11 @@ environment:
 # versions available, run `flutter pub outdated`.
 dependencies:
   cached_network_image: ^3.2.2
+  cloud_functions: ^3.3.6
   cupertino_icons: ^1.0.2
   faker: ^2.0.0
+  firebase_auth: ^3.7.0
+  firebase_core: ^1.21.1
   flutter:
     sdk: flutter
   google_fonts: ^3.0.1

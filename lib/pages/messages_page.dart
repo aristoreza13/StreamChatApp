@@ -3,8 +3,7 @@ import 'package:chatstream/helpers.dart';
 import 'package:chatstream/models/models.dart';
 import 'package:chatstream/screens/screens.dart';
 import 'package:chatstream/theme.dart';
-import 'package:chatstream/widgets/avatar.dart';
-import 'package:chatstream/widgets/display_error_message.dart';
+import 'package:chatstream/widgets/widgets.dart';
 import 'package:faker/faker.dart';
 import 'package:flutter/material.dart';
 import 'package:jiffy/jiffy.dart';
@@ -52,9 +51,9 @@ class _MessagesPageState extends State<MessagesPage> {
         listBuilder: (context, channels) {
           return CustomScrollView(
             slivers: [
-              const SliverToBoxAdapter(
-                child: _Stories(),
-              ),
+              // const SliverToBoxAdapter(
+              //   child: _Stories(),
+              // ),
               SliverList(
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
@@ -151,21 +150,9 @@ class _MessageTile extends StatelessWidget {
                     const SizedBox(
                       height: 8.0,
                     ),
-                    Container(
-                      width: 18,
-                      height: 18,
-                      decoration: const BoxDecoration(
-                        color: AppColors.secondary,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Center(
-                        child: Text(
-                          '1',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: AppColors.textLight,
-                          ),
-                        ),
+                    Center(
+                      child: UnreadIndicator(
+                        channel: channel,
                       ),
                     ),
                   ],
@@ -178,22 +165,32 @@ class _MessageTile extends StatelessWidget {
     );
   }
 
-  // Func Widget : Stream new message
+  // Func Widget : Stream new message and show unread
   Widget _buildLastMessage() {
-    return BetterStreamBuilder<Message>(
-      stream: channel.state!.lastMessageStream,
-      initialData: channel.state!.lastMessage,
-      builder: (context, lastMessage) {
-        return Text(
-          lastMessage.text ?? '',
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            fontSize: 12,
-            color: AppColors.textFaded,
-          ),
-        );
-      },
-    );
+    return BetterStreamBuilder<int>(
+        stream: channel.state!.unreadCountStream,
+        initialData: channel.state?.unreadCount ?? 0,
+        builder: (context, count) {
+          return BetterStreamBuilder<Message>(
+            stream: channel.state!.lastMessageStream,
+            initialData: channel.state!.lastMessage,
+            builder: (context, lastMessage) {
+              return Text(
+                lastMessage.text ?? '',
+                overflow: TextOverflow.ellipsis,
+                style: (count > 0)
+                    ? const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.secondary,
+                      )
+                    : const TextStyle(
+                        fontSize: 12,
+                        color: AppColors.textFaded,
+                      ),
+              );
+            },
+          );
+        });
   }
 
   // Func Widget : Stream date of message

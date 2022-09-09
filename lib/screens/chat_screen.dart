@@ -1,15 +1,16 @@
+import 'dart:async';
+
 import 'package:chatstream/app.dart';
 import 'package:chatstream/helpers.dart';
 import 'package:collection/collection.dart' show IterableExtension;
 import 'package:chatstream/theme.dart';
-import 'package:chatstream/widgets/glowing_action_button.dart';
 import 'package:chatstream/widgets/widgets.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:jiffy/jiffy.dart';
 import 'package:stream_chat_flutter_core/stream_chat_flutter_core.dart';
 
-class ChatScreen extends StatelessWidget {
+class ChatScreen extends StatefulWidget {
   // Initialize the channel
   static Route routeWithChannel(Channel channel) => MaterialPageRoute(
         builder: ((context) => StreamChannel(
@@ -23,13 +24,40 @@ class ChatScreen extends StatelessWidget {
   }) : super(key: key);
 
   @override
+  State<ChatScreen> createState() => _ChatScreenState();
+}
+
+class _ChatScreenState extends State<ChatScreen> {
+  late StreamSubscription<int> unreadCountSubscription;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Mark message as read
+    unreadCountSubscription = StreamChannel.of(context)
+        .channel
+        .state!
+        .unreadCountStream
+        .listen(_unreadCountHandler);
+  }
+
+  Future<void> _unreadCountHandler(int count) async {
+    if (count > 0) {
+      await StreamChannel.of(context).channel.markRead();
+    }
+  }
+
+  @override
+  void dispose() {
+    unreadCountSubscription.cancel();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        iconTheme: Theme.of(context).iconTheme,
-        centerTitle: false,
-        backgroundColor: Colors.transparent,
-        elevation: 0,
         leadingWidth: 54,
         leading: Align(
           alignment: Alignment.centerRight,
@@ -268,7 +296,7 @@ class _MessageTile extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(top: 8.0),
               child: Text(
-                message.createdAt.toLocal().toString(),
+                Jiffy(message.createdAt.toLocal()).jm,
                 style: const TextStyle(
                   color: AppColors.textFaded,
                   fontSize: 10,
@@ -324,7 +352,7 @@ class _MessageOwnTile extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(top: 8.0),
               child: Text(
-                message.createdAt.toLocal().toString(),
+                Jiffy(message.createdAt.toLocal()).jm,
                 style: const TextStyle(
                   color: AppColors.textFaded,
                   fontSize: 10,
@@ -560,8 +588,31 @@ class ConnectionStatusBuilder extends StatelessWidget {
   }
 }
 
-class _ActionBar extends StatelessWidget {
+class _ActionBar extends StatefulWidget {
   const _ActionBar();
+
+  @override
+  State<_ActionBar> createState() => _ActionBarState();
+}
+
+class _ActionBarState extends State<_ActionBar> {
+  final TextEditingController controller = TextEditingController();
+
+  Future<void> _sendMessage() async {
+    if (controller.text.isNotEmpty) {
+      // Send message and passing to Class (message.text)
+      StreamChannel.of(context)
+          .channel
+          .sendMessage(Message(text: controller.text));
+      controller.clear();
+    }
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -584,15 +635,21 @@ class _ActionBar extends StatelessWidget {
               child: Icon(CupertinoIcons.camera_fill),
             ),
           ),
-          const Expanded(
+          Expanded(
             child: Padding(
-              padding: EdgeInsets.only(left: 16.0),
+              padding: const EdgeInsets.only(left: 16.0),
               child: TextField(
-                style: TextStyle(fontSize: 14),
-                decoration: InputDecoration(
+                controller: controller,
+                onChanged: (value) {
+                  // Notifying another user that we are typing
+                  StreamChannel.of(context).channel.keyStroke();
+                },
+                style: const TextStyle(fontSize: 14),
+                decoration: const InputDecoration(
                   hintText: 'Type something...',
                   border: InputBorder.none,
                 ),
+                onSubmitted: (_) => _sendMessage(),
               ),
             ),
           ),
@@ -601,9 +658,7 @@ class _ActionBar extends StatelessWidget {
             child: GlowingActionButton(
               color: AppColors.accent,
               icon: Icons.send_rounded,
-              onPressed: () {
-                print('Send Message');
-              },
+              onPressed: _sendMessage,
             ),
           ),
         ],
